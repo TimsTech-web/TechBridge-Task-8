@@ -1,0 +1,22 @@
+{
+  "data-analytics": [
+    { "days": "Days 1-3", "level": "beginner", "title": "Data Cleaning Basics", "desc": "Clean a messy dataset using Google Sheets or Excel. Fix duplicates, blank cells, inconsistent formatting, and incorrect data types." },
+    { "days": "Days 4-7", "level": "beginner", "title": "Formulas & Pivot Tables", "desc": "Use spreadsheet formulas and Pivot Tables to answer questions and extract useful insights from a dataset." },
+    { "days": "Days 8-10", "level": "beginner", "title": "Data Visualization", "desc": "Create charts and a simple dashboard that communicate useful insights from a dataset." },
+    { "days": "Days 11-14", "level": "intermediate", "title": "Introduction to SQL", "desc": "Practice basic SQL queries and use them to answer real-world questions about data." },
+    { "days": "Days 15-18", "level": "intermediate", "title": "SQL Joins & Aggregations", "desc": "Use JOIN, GROUP BY, and aggregate functions to analyze information across multiple tables." },
+    { "days": "Days 19-21", "level": "intermediate", "title": "Lookup Functions & Data Wrangling", "desc": "Use VLOOKUP or XLOOKUP to combine related datasets and handle data mismatches." },
+    { "days": "Days 22-25", "level": "intermediate", "title": "Mini Analysis Project", "desc": "Complete an end-to-end analysis using data cleaning, formulas, Pivot Tables, charts, and recommendations." },
+    { "days": "Days 26-30", "level": "advanced", "title": "Capstone Project", "desc": "Complete a larger project combining spreadsheet analysis and SQL using at least two related tables." }
+  ],
+  "web-development": [
+    { "days": "Days 1-3", "level": "beginner", "title": "Build the TechBridge Homepage", "desc": "Create the first version of the TechBridge website using HTML and CSS." },
+    { "days": "Days 4-7", "level": "beginner", "title": "Build the TechBridge Programs Experience", "desc": "Create a Programs experience that presents TechBridge's available learning programmes." },
+    { "days": "Days 8-10", "level": "beginner", "title": "Build the Internship Tasks Experience", "desc": "Create an interface that presents the internship tasks and explains the learning journey." },
+    { "days": "Days 11-14", "level": "intermediate", "title": "Build an Interactive Task Tracker", "desc": "Use JavaScript to make the task experience interactive and allow progress to be tracked." },
+    { "days": "Days 15-18", "level": "intermediate", "title": "Build the Intern Registration Experience", "desc": "Create a professional registration and onboarding interface for TechBridge interns." },
+    { "days": "Days 19-21", "level": "intermediate", "title": "Build the Task Submission System", "desc": "Create an interface through which interns can prepare and submit their task work." },
+    { "days": "Days 22-25", "level": "advanced", "title": "Build the Intern Dashboard", "desc": "Create a dashboard where interns can view their profile, progress, tasks, and submissions." },
+    { "days": "Days 26-30", "level": "advanced", "title": "Build the Complete TechBridge Internship Platform", "desc": "Combine the components created during the internship into a complete TechBridge platform." }
+  ]
+}

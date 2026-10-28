@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechBridge — Intern Dashboard</title>
+   <link rel="icon" type="image/png" href="logo.png">  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><link rel="stylesheet" href="styles.css">
+<style>
+/* ============================================================
+   TechBridge Intern Dashboard — single-file app
+   HTML5 + CSS3 + JavaScript (localStorage persistence)
+   Shares task keys with index.html trackers:
+   localStorage["techbridge-tracker-<track>"] = [done indexes]
+   ============================================================ */
+:root {
+  --navy-900: #0b1f3f;
+  --navy-800: #134b7c;
+  --blue-600: #0ea5e9;
+  --blue-500: #38bdf8;
+  --green-500: #22c55e;
+  --green-400: #4ade80;
+  --amber-500: #f59e0b;
+  --purple-500: #8b5cf6;
+  --ink: #16324f;
+  --muted: #5b6f88;
+  --faint: #7a8ca3;
+  --line: #e5ecf5;
+  --card: #ffffff;
+  --bg: #f2f6fb;
+  --radius: 18px;
+  --shadow: 0 8px 30px rgba(15,45,85,.08);
+  --shadow-lg: 0 18px 45px rgba(6,30,60,.18);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ------------------------------ LOGIN GATE ------------------------------ */
+.login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 24px 14px;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(56,189,248,.28), transparent 45%),
+    radial-gradient(circle at 10% 90%, rgba(34,197,94,.20), transparent 40%),
+    linear-gradient(120deg, #0b1f3f, #134b7c 60%, #0e628e);
+}
+.login-card {
+  width: 100%; max-width: 430px; border-radius: 24px; overflow: hidden;
+  background: #f6f9fd; box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  animation: rise .4s cubic-bezier(.2,.9,.3,1.15);
+}
+@keyframes rise { from { opacity: 0; transform: translateY(26px) scale(.97); } to { opacity: 1; transform: none; } }
+.login-hero { position: relative; padding: 30px 30px 24px; color: #fff;
+  background: linear-gradient(120deg, #0b1f3f, #134b7c 60%, #0e628e); }
+.login-hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: radial-gradient(circle at 85% 15%, rgba(56,189,248,.4), transparent 45%); }
+.login-chip { position: relative; display: inline-flex; align-items: center; gap: 7px;
+  font-size: .62rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: #86efac; background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.35);
+  border-radius: 999px; padding: 4px 11px; }
+.login-hero h1 { position: relative; margin: 10px 0 4px; font-size: 1.45rem; }
+.login-hero p { position: relative; margin: 0; font-size: .83rem; color: rgba(203,225,245,.85); }
+.login-body { padding: 24px 30px 28px; }
+.field { margin-bottom: 15px; }
+.field label { display: block; font-size: .72rem; font-weight: 800; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ink); margin-bottom: 6px; }
+.field input, .field select {
+  width: 100%; font: inherit; font-size: .9rem; color: var(--ink);
+  padding: 12px 14px; border: 1.5px solid #d7e2ef; border-radius: 12px; background: #fff;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus, .field select:focus { border-color: var(--blue-600); box-shadow: 0 0 0 4px rgba(14,165,233,.14); }
+.field select {
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6f88' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.form-error { margin: 0 0 12px; font-size: .78rem; font-weight: 700; color: #dc2626;
+  background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 9px 12px; }
+.form-error[hidden] { display: none; }
+.btn-primary {
+  width: 100%; border: 0; cursor: pointer; font: inherit;
+  background: linear-gradient(120deg, #0284c7, #0ea5e9); color: #fff;
+  font-weight: 800; font-size: .95rem; padding: 14px; border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(14,165,233,.4); transition: transform .15s, box-shadow .15s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(14,165,233,.5); }
+.login-foot { margin: 16px 0 0; text-align: center; font-size: .74rem; color: var(--faint); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-500); position: relative; }
+.live-dot::after { content: ""; position: absolute; inset: -4px; border-radius: 50%;
+  border: 2px solid rgba(34,197,94,.55); animation: pulse 1.6s ease-out infinite; }
+@keyframes pulse { 0% { transform: scale(.55); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+
+/* ------------------------------ APP SHELL ------------------------------ */
+.app { display: none; }
+.app.on { display: block; animation: appIn .35s ease; }
+@keyframes appIn { from { opacity: 0; } to { opacity: 1; } }
+
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(11,31,63,.96); backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(6,30,60,.25);
+}
+.topbar-inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px;
+  display: flex; align-items: center; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 1.05rem; }
+.brand-mark { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0284c7, #0ea5e9); font-size: .8rem; font-weight: 800; box-shadow: 0 4px 12px rgba(14,165,233,.45); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.topbar-user { color: #dbeafe; font-size: .82rem; font-weight: 700; }
+.btn-ghost {
+  border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff;
+  font: inherit; font-size: .78rem; font-weight: 700; padding: 8px 16px; border-radius: 999px;
+  cursor: pointer; transition: background .15s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,.22); }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 26px 20px 60px; }
+
+/* ------------------------------ PROFILE HERO ------------------------------ */
+.hero {
+  position: relative; overflow: hidden; border-radius: 24px; color: #fff; padding: 30px 32px;
+  background: linear-gradient(120deg, #0b1f3f, #134b7c 60%, #0e628e);
+  box-shadow: var(--shadow-lg);
+}
+.hero.wd { background: linear-gradient(120deg, #052e16, #166534 60%, #0d9488); }
+.hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: radial-gradient(circle at 88% 12%, rgba(56,189,248,.35), transparent 45%),
+              radial-gradient(circle at 8% 95%, rgba(34,197,94,.22), transparent 40%); }
+.hero-grid { position: relative; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.avatar {
+  flex: none; width: 74px; height: 74px; border-radius: 22px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; font-weight: 800; color: #fff;
+  background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2);
+}
+.hero-info { flex: 1 1 320px; min-width: 260px; }
+.hero-kicker { display: inline-flex; align-items: center; gap: 7px; font-size: .62rem; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase; color: #86efac;
+  background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.35);
+  border-radius: 999px; padding: 4px 11px; }
+.hero h1 { margin: 10px 0 4px; font-size: 1.7rem; line-height: 1.2; }
+.hero h1 span { opacity: .85; font-weight: 600; }
+.hero .welcome { margin: 0 0 14px; color: rgba(216,232,248,.9); font-size: .92rem; max-width: 560px; }
+.hero-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+.meta-chip { display: inline-flex; align-items: center; gap: 7px; font-size: .74rem; font-weight: 700;
+  color: #eaf3fc; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px; padding: 6px 13px; }
+.status-card {
+  flex: none; min-width: 230px; border-radius: 18px; padding: 16px 18px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+}
+.status-card .sc-label { font-size: .62rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #93c5fd; }
+.status-card .sc-status { display: flex; align-items: center; gap: 8px; margin: 6px 0 2px;
+  font-size: 1.05rem; font-weight: 800; }
+.status-card .sc-sub { font-size: .76rem; color: rgba(203,225,245,.8); }
+
+/* ------------------------------ PROGRESS SECTION ------------------------------ */
+.section { margin-top: 30px; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.section-head h2 { font-size: 1.3rem; }
+.section-head p { margin: 0; font-size: .82rem; color: var(--faint); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.stat-card { position: relative; overflow: hidden; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow);
+  transition: transform .18s ease, box-shadow .18s ease; }
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 38px rgba(15,45,85,.12); }
+.stat-card .sc-ico { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center;
+  justify-content: center; font-size: 1.15rem; margin-bottom: 12px; }
+.stat-card .sc-num { font-size: 1.9rem; font-weight: 800; line-height: 1; color: var(--ink); }
+.stat-card .sc-lbl { display: block; margin-top: 5px; font-size: .72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--faint); }
+.ico-blue { background: #e0f2fe; } .ico-green { background: #dcfce7; }
+.ico-amber { background: #fef3c7; } .ico-purple { background: #ede9fe; }
+
+.progress-card { margin-top: 16px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow); }
+.progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.progress-top strong { font-size: .92rem; }
+.progress-top em { font-style: normal; font-size: 1.25rem; font-weight: 800; color: #0284c7; }
+.progress-bar { height: 14px; border-radius: 999px; background: #e8eff7; overflow: hidden; }
+.progress-fill { display: block; height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  box-shadow: 0 0 14px rgba(74,222,128,.6); transition: width .8s cubic-bezier(.4,0,.2,1); }
+.progress-hint { display: block; margin-top: 9px; font-size: .74rem; color: var(--faint); }
+
+/* ------------------------------ TASK TIMELINE ------------------------------ */
+.task { display: flex; animation: taskIn .4s ease both; }
+.task:nth-child(2){animation-delay:.04s}.task:nth-child(3){animation-delay:.08s}.task:nth-child(4){animation-delay:.12s}
+.task:nth-child(5){animation-delay:.16s}.task:nth-child(6){animation-delay:.20s}.task:nth-child(7){animation-delay:.24s}
+.task:nth-child(8){animation-delay:.28s}
+@keyframes taskIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+.tl { display: flex; flex-direction: column; align-items: center; width: 46px; flex: none; }
+.node { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .84rem; flex: none; z-index: 1;
+  background: #fff; border: 2px solid #cbd5e1; color: #94a3b8; transition: all .25s; }
+.node-done { background: linear-gradient(135deg, #16a34a, #22c55e); border-color: #16a34a; color: #fff;
+  box-shadow: 0 4px 12px rgba(22,163,74,.35); }
+.node-current { background: linear-gradient(135deg, #0284c7, #0ea5e9); border-color: #0284c7; color: #fff;
+  box-shadow: 0 0 0 5px rgba(14,165,233,.18), 0 4px 14px rgba(2,132,199,.4);
+  animation: nodePulse 1.8s infinite; }
+@keyframes nodePulse { 50% { box-shadow: 0 0 0 9px rgba(14,165,233,.08), 0 4px 14px rgba(2,132,199,.4); } }
+.tl-line { flex: 1; width: 2px; min-height: 14px; background: #dbe4ee; margin: 2px 0; }
+.tl-line.done { background: linear-gradient(#16a34a, #4ade80); }
+.task:last-child .tl-line { display: none; }
+
+.task-body { flex: 1; margin: 0 0 14px 16px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 16px; padding: 15px 18px; box-shadow: 0 3px 12px rgba(15,45,85,.05);
+  transition: transform .15s ease, box-shadow .15s ease; }
+.task-body:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(15,45,85,.1); }
+.task.done .task-body { border-left: 4px solid var(--green-500); }
+.task.current .task-body { border-left: 4px solid var(--blue-600); border-color: #7dd3fc;
+  box-shadow: 0 6px 22px rgba(2,132,199,.14); }
+.task.upcoming .task-body { border-left: 4px solid var(--amber-500); }
+
+.task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.task-top h4 { margin: 0; font-size: .96rem; color: var(--ink); flex: 1 1 240px; }
+.task.done .task-top h4 { text-decoration: line-through; opacity: .72; }
+.task-days { flex: none; font-size: .68rem; font-weight: 700; color: var(--faint);
+  background: #f1f5fa; padding: 3px 10px; border-radius: 999px; }
+.task.current .task-days { background: #e0f2fe; color: #0369a1; }
+.task-tags { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+.lv { font-size: .64rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 999px; }
+.lv-beginner { background: #dcfce7; color: #15803d; }
+.lv-intermediate { background: #dbeafe; color: #1d4ed8; }
+.lv-advanced { background: #ede9fe; color: #6d28d9; }
+.st { display: inline-flex; align-items: center; gap: 5px; font-size: .66rem; font-weight: 800;
+  padding: 3px 10px; border-radius: 999px; }
+.st-done { background: #dcfce7; color: #16a34a; }
+.st-current { background: #bae6fd; color: #075985; }
+.st-upcoming { background: #fef3c7; color: #b45309; }
+.mini-dot { width: 7px; height: 7px; border-radius: 50%; background: #0284c7; animation: blink 1.2s infinite; }
+@keyframes blink { 50% { opacity: .35; } }
+.task-desc { margin: 9px 0 0; font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+.check { display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  color: #64748b; user-select: none; }
+.check input { appearance: none; -webkit-appearance: none; width: 21px; height: 21px; margin: 0;
+  border: 2px solid #cbd5e1; border-radius: 7px; cursor: pointer; position: relative; background: #fff;
+  transition: background .2s, border-color .2s; }
+.check input:checked { background: linear-gradient(135deg, #16a34a, #22c55e); border-color: #16a34a; }
+.check input:checked::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px;
+  border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+.check input:checked + span { color: #16a34a; }
+
+.reset-btn { border: 1px solid #d7e2ef; background: #fff; color: var(--faint); font: inherit;
+  font-size: .74rem; font-weight: 700; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  transition: all .15s; }
+.reset-btn:hover { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+
+/* ------------------------------ TECHNOLOGIES ------------------------------ */
+.tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 14px; }
+.tech-card { display: block; text-decoration: none; background: var(--card); border: 1px solid var(--line);
+  border-radius: 16px; padding: 17px 18px; box-shadow: 0 3px 12px rgba(15,45,85,.05);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s; }
+.tech-card:hover { transform: translateY(-4px); box-shadow: 0 14px 32px rgba(15,45,85,.12); border-color: #bae6fd; }
+.tech-ico { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 11px; }
+.tech-card h4 { margin: 0 0 3px; font-size: .92rem; color: var(--ink); }
+.tech-card p { margin: 0; font-size: .76rem; color: var(--muted); line-height: 1.45; }
+.tech-tag { display: inline-block; margin-top: 9px; font-size: .62rem; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; color: #0284c7; background: #e0f2fe; border-radius: 999px; padding: 3px 9px; }
+
+/* ------------------------------ CHALLENGE HUB ------------------------------ */
+.hub { position: relative; overflow: hidden; border-radius: 22px; color: #fff; padding: 24px 26px;
+  background: linear-gradient(135deg, #1e1b4b, #4c1d95 55%, #0e628e); box-shadow: var(--shadow-lg); }
+.hub-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+.hub-head h3 { margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 9px; }
+.hub-head p { margin: 3px 0 0; font-size: .8rem; color: rgba(226,232,240,.8); }
+.hub-badge { font-size: .62rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  background: rgba(167,139,250,.2); border: 1px solid rgba(167,139,250,.5); color: #c4b5fd;
+  border-radius: 999px; padding: 5px 12px; }
+.hub-list { display: grid; gap: 10px; }
+.hub-item { display: flex; align-items: center; gap: 13px; background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 12px 15px;
+  transition: background .15s, transform .15s; }
+.hub-item:hover { background: rgba(255,255,255,.15); transform: translateX(4px); }
+.hub-item .hi-num { flex: none; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center;
+  justify-content: center; font-size: .74rem; font-weight: 800; background: rgba(167,139,250,.25); color: #ddd6fe; }
+.hub-item .hi-body { flex: 1; }
+.hub-item .hi-body strong { display: block; font-size: .86rem; }
+.hub-item .hi-body span { font-size: .72rem; color: rgba(226,232,240,.75); }
+.hub-item .hi-lv { flex: none; font-size: .62rem; font-weight: 800; letter-spacing: .05em;
+  text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.hi-lv-easy { background: #dcfce7; color: #15803d; }
+.hi-lv-medium { background: #dbeafe; color: #1d4ed8; }
+.hi-lv-hard { background: #ede9fe; color: #6d28d9; }
+.hub-lock { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; text-align: center; padding: 30px;
+  background: rgba(15,15,40,.82); backdrop-filter: blur(5px); }
+.hub-lock[hidden] { display: none; }
+.hub-lock .lock-ico { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; background: rgba(167,139,250,.2); border: 1px solid rgba(167,139,250,.5); }
+.hub-lock strong { font-size: 1.05rem; }
+.hub-lock p { margin: 0; font-size: .8rem; color: rgba(226,232,240,.8); max-width: 380px; }
+.hub-lock .lock-bar { width: 240px; max-width: 80%; height: 8px; border-radius: 999px; background: rgba(255,255,255,.14); overflow: hidden; }
+.hub-lock .lock-fill { display: block; height: 100%; background: linear-gradient(90deg, #8b5cf6, #c4b5fd); border-radius: 999px; transition: width .5s; }
+
+/* ------------------------------ CELEBRATION + MISC ------------------------------ */
+.celebrate { margin-top: 16px; text-align: center; border-radius: 16px; padding: 16px;
+  background: linear-gradient(120deg, #dcfce7, #d1fae5); border: 1px solid #86efac; color: #14532d;
+  font-weight: 700; font-size: .9rem; }
+.celebrate[hidden] { display: none; }
+
+.footer-bar { max-width: 1120px; margin: 0 auto; padding: 18px 20px 30px; text-align: center;
+  font-size: .74rem; color: var(--faint); }
+
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(80px); z-index: 999;
+  background: #0b1f3f; color: #fff; font-size: .8rem; font-weight: 700; padding: 11px 20px;
+  border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,.35); opacity: 0;
+  transition: transform .3s cubic-bezier(.2,.9,.3,1.2), opacity .3s; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+@media (max-width: 720px) {
+  .wrap { padding: 18px 14px 50px; }
+  .hero { padding: 24px 20px; }
+  .hero h1 { font-size: 1.35rem; }
+  .status-card { width: 100%; }
+  .task-body { margin-left: 12px; padding: 13px 14px; }
+  .topbar-user { display: none; }
+}
+</style>
+<base target="_blank">
+<base target="_blank">
+</head>
+<body>
+
+<!-- ================= LOGIN GATE ================= -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-hero">
+      <span class="login-chip"><span class="live-dot"></span> Intern Portal</span>
+      <h1>Welcome back, Intern 👋</h1>
+      <p>Sign in to open your TechBridge internship dashboard.</p>
+    </div>
+    <div class="login-body">
+      <p class="form-error" id="loginError" hidden>Please fill in every field correctly.</p>
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="inName">Full Name</label>
+          <input type="text" id="inName" placeholder="e.g. Adaeze Okafor" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="inProgram">Programme</label>
+          <select id="inProgram">
+            <option value="">Select your track…</option>
+            <option value="data-analytics">Data Analytics</option>
+            <option value="web-development">Web Development</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="inId">Student ID</label>
+          <input type="text" id="inId" placeholder="e.g. TB-2026-0147" autocomplete="off">
+        </div>
+        <button type="submit" class="btn-primary">Open My Dashboard →</button>
+      </form>
+      <p class="login-foot">© 2026 TechBridge Internship Programme</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD APP ================= -->
+<div class="app" id="app">
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><span class="brand-mark">TB</span> TechBridge</div>
+      <div class="topbar-right">
+        <span class="topbar-user" id="topbarUser"></span>
+        <button class="btn-ghost" id="logoutBtn" type="button">Log out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ===== TOP PROFILE SECTION ===== -->
+    <section class="hero" id="heroCard">
+      <div class="hero-grid">
+        <div class="avatar" id="avatarInitials">?</div>
+        <div class="hero-info">
+          <span class="hero-kicker"><span class="live-dot"></span> Intern Dashboard · 30 Days</span>
+          <h1><span id="heroName">Intern</span> <span id="heroId"></span></h1>
+          <p class="welcome" id="welcomeMsg"></p>
+          <div class="hero-meta">
+            <span class="meta-chip" id="trackChip"></span>
+            <span class="meta-chip">🗓️ Cohort: October 2026</span>
+            <span class="meta-chip" id="dayChip"></span>
+          </div>
+        </div>
+        <div class="status-card">
+          <span class="sc-label">Current Internship Status</span>
+          <div class="sc-status" id="statusMain"><span class="live-dot"></span> <span id="statusText">In Progress</span></div>
+          <div class="sc-sub" id="statusSub"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PROGRESS SECTION ===== -->
+    <section class="section">
+      <div class="section-head">
+        <h2>📈 My Progress</h2>
+        <p>Saved automatically on this device — same data as your site tracker.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="sc-ico ico-blue">🎯</div><span class="sc-num">8</span><span class="sc-lbl">Total Tasks</span></div>
+        <div class="stat-card"><div class="sc-ico ico-green">✅</div><span class="sc-num" id="statDone">0</span><span class="sc-lbl">Tasks Completed</span></div>
+        <div class="stat-card"><div class="sc-ico ico-amber">⏳</div><span class="sc-num" id="statLeft">8</span><span class="sc-lbl">Tasks Remaining</span></div>
+        <div class="stat-card"><div class="sc-ico ico-purple">📊</div><span class="sc-num" id="statPct">0%</span><span class="sc-lbl">Overall Progress</span></div>
+      </div>
+      <div class="progress-card">
+        <div class="progress-top"><strong>Internship completion</strong><em id="pctBig">0%</em></div>
+        <div class="progress-bar"><span class="progress-fill" id="progressFill"></span></div>
+        <span class="progress-hint" id="progressHint"></span>
+      </div>
+      <div class="celebrate" id="celebrate" hidden>🎉 Congratulations — you have completed all 8 tasks! You're graduation-ready. 🎓</div>
+    </section>
+
+    <!-- ===== TASKS SECTION ===== -->
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>🗂️ Internship Tasks</h2>
+          <p id="taskCountLbl">Tick tasks off as you complete them. Your current task is highlighted in blue.</p>
+        </div>
+        <button class="reset-btn" id="resetBtn" type="button">Reset progress</button>
+      </div>
+      <div id="taskList"></div>
+    </section>
+
+    <!-- ===== CHALLENGE HUB (Task 5 unlock) ===== -->
+    <section class="section">
+      <div class="hub" id="hub">
+        <div class="hub-head">
+          <div>
+            <h3>⚡ Challenge Hub</h3>
+            <p>Optional stretch challenges to deepen your skills — unlocked from Task 5.</p>
+          </div>
+          <span class="hub-badge" id="hubBadge">Locked · Task 5</span>
+        </div>
+        <div class="hub-list" id="hubList"></div>
+        <div class="hub-lock" id="hubLock">
+          <div class="lock-ico">🔒</div>
+          <strong>Challenge Hub is locked</strong>
+          <p id="lockMsg">Complete Task 5 to unlock the Challenge Hub.</p>
+          <div class="lock-bar"><span class="lock-fill" id="lockFill"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TECHNOLOGIES SECTION ===== -->
+    <section class="section">
+      <div class="section-head">
+        <h2>🚀 Explore Modern Web Technologies</h2>
+        <p>Click any card to open a trusted learning resource.</p>
+      </div>
+      <div class="tech-grid" id="techGrid"></div>
+    </section>
+
+  </div>
+
+  <div class="footer-bar">© 2026 TechBridge Internship Programme · Designed by Abiodun</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= DATA ================= */
+  var PROFILE_KEY = 'techbridge-intern';
+  var TRACK_PREFIX = 'techbridge-tracker-';
+
+  var TRACKS = {
+    'data-analytics': {
+      label: '📊 Data Analytics', heroCls: '',
+      welcome: 'Welcome back! Every dataset you clean and every query you write is one step closer to becoming a job-ready Data Analyst. Keep going — your capstone awaits!',
+      tasks: [
+        { days: 'Days 1–3',   level: 'beginner',     title: 'Data Cleaning Basics', desc: 'Clean a messy dataset using Google Sheets/Excel — fix duplicates, blank cells, inconsistent formatting and wrong data types.' },
+        { days: 'Days 4–7',   level: 'beginner',     title: 'Formulas & Pivot Tables', desc: 'Use spreadsheet formulas and Pivot Tables to answer questions and extract useful insights from a dataset.' },
+        { days: 'Days 8–10',  level: 'beginner',     title: 'Data Visualization', desc: 'Create charts and a simple dashboard that communicate useful insights from a dataset.' },
+        { days: 'Days 11–14', level: 'intermediate', title: 'Introduction to SQL', desc: 'Practice basic SQL queries and use them to answer real-world questions about data.' },
+        { days: 'Days 15–18', level: 'intermediate', title: 'SQL Joins & Aggregations', desc: 'Use JOIN, GROUP BY and aggregates (COUNT, SUM, AVG) to analyze information across multiple tables.' },
+        { days: 'Days 19–21', level: 'intermediate', title: 'Lookup Functions & Data Wrangling', desc: 'Use VLOOKUP or XLOOKUP to combine related datasets and handle data mismatches.' },
+        { days: 'Days 22–25', level: 'intermediate', title: 'Mini Analysis Project', desc: 'Complete a small end-to-end analysis involving cleaning, formulas, Pivot Tables, charts and recommendations.' },
+        { days: 'Days 26–30', level: 'advanced',     title: 'Capstone Project', desc: 'Complete a larger project combining spreadsheet analysis and SQL using at least two related tables.' }
+      ],
+      techs: [
+        { name: 'SQL', tag: 'Databases', desc: 'Query and analyze data across relational databases.', color: '#f59e0b', link: 'https://www.w3schools.com/sql/', icon: '🗄️' },
+        { name: 'Python', tag: 'Analytics', desc: 'Clean, transform and analyze data with Pandas.', color: '#3776ab', link: 'https://www.w3schools.com/python/', icon: '🐍' },
+        { name: 'Power BI', tag: 'Dashboards', desc: 'Build interactive dashboards for business decisions.', color: '#f2c811', link: 'https://learn.microsoft.com/en-us/power-bi/', icon: '📊' },
+        { name: 'Excel / Sheets', tag: 'Spreadsheets', desc: 'Formulas, Pivot Tables and data modelling basics.', color: '#16a34a', link: 'https://support.google.com/a/users/answer/9282959', icon: '📗' },
+        { name: 'Statistics', tag: 'Foundations', desc: 'A/B testing, distributions and statistical thinking.', color: '#8b5cf6', link: 'https://www.khanacademy.org/statistics-probability', icon: '📐' },
+        { name: 'Git & GitHub', tag: 'Version Control', desc: 'Track your analysis work like a professional.', color: '#334155', link: 'https://github.com/', icon: '🌿' },
+        { name: 'Looker Studio', tag: 'Dashboards', desc: 'Free Google dashboards for reports and sharing.', color: '#4285f4', link: 'https://lookerstudio.google.com/', icon: '📈' },
+        { name: 'BigQuery', tag: 'Cloud Data', desc: 'Explore warehouse-scale SQL in the cloud.', color: '#4386fa', link: 'https://cloud.google.com/bigquery', icon: '☁️' }
+      ],
+      challenges: [
+        { name: 'Dashboard Duels', desc: 'Rebuild a real-world KPI dashboard in Power BI or Looker Studio.', lv: 'easy' },
+        { name: 'Messy Data Rescue', desc: 'Take an intentionally corrupted CSV and fully restore it with documentation.', lv: 'medium' },
+        { name: 'Query Sprint', desc: 'Answer 10 business questions with a single optimized SQL query each.', lv: 'medium' },
+        { name: 'Insight Storytelling', desc: 'Turn a raw dataset into a 5-slide data story with clear recommendations.', lv: 'hard' }
+      ]
+    },
+    'web-development': {
+      label: '💻 Web Development', heroCls: 'wd',
+      welcome: 'Welcome back! Every page you build and every feature you ship brings you closer to a complete, portfolio-ready platform. Your code today is your job offer tomorrow — keep building!',
+      tasks: [
+        { days: 'Days 1–3',   level: 'beginner',     title: 'Build the TechBridge Homepage', desc: 'Create the first version of the TechBridge website using HTML and CSS.' },
+        { days: 'Days 4–7',   level: 'beginner',     title: 'Build the TechBridge Programs Experience', desc: 'Create a Programs experience that presents TechBridge’s available learning programs.' },
+        { days: 'Days 8–10',  level: 'beginner',     title: 'Build the Internship Tasks Experience', desc: 'Create an interface that presents the TechBridge internship tasks and helps users understand the internship journey.' },
+        { days: 'Days 11–14', level: 'intermediate', title: 'Build an Interactive Task Tracker', desc: 'Use JavaScript to make the internship task experience interactive and allow progress to be tracked.' },
+        { days: 'Days 15–18', level: 'intermediate', title: 'Build the Intern Registration Experience', desc: 'Create a professional registration/onboarding interface for TechBridge interns.' },
+        { days: 'Days 19–21', level: 'intermediate', title: 'Build the Task Submission System', desc: 'Create an interface through which interns can prepare and submit their task work.' },
+        { days: 'Days 22–25', level: 'advanced',     title: 'Build the Intern Dashboard', desc: 'Create a dashboard where an intern can view their profile, progress, tasks, and submissions.' },
+        { days: 'Days 26–30', level: 'advanced',     title: 'Build the Complete TechBridge Internship Platform', desc: 'Combine the different components created during the internship into a complete TechBridge platform.' }
+      ],
+      techs: [
+        { name: 'HTML5', tag: 'Structure', desc: 'Semantic markup — the skeleton of every web page.', color: '#e34f26', link: 'https://developer.mozilla.org/en-US/docs/Web/HTML', icon: '🏗️' },
+        { name: 'CSS3', tag: 'Styling', desc: 'Flexbox, Grid, animations and responsive design.', color: '#1572b6', link: 'https://developer.mozilla.org/en-US/docs/Web/CSS', icon: '🎨' },
+        { name: 'JavaScript', tag: 'Interactivity', desc: 'DOM manipulation, events and modern ES6+ syntax.', color: '#f7df1e', link: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', icon: '⚡' },
+        { name: 'Git & GitHub', tag: 'Version Control', desc: 'Commit, branch, push and collaborate on code.', color: '#334155', link: 'https://github.com/', icon: '🌿' },
+        { name: 'React', tag: 'Framework', desc: 'Component-based UI used by most modern teams.', color: '#61dafb', link: 'https://react.dev/', icon: '⚛️' },
+        { name: 'Tailwind CSS', tag: 'Utility CSS', desc: 'Rapid, utility-first styling for modern interfaces.', color: '#38bdf8', link: 'https://tailwindcss.com/', icon: '🌊' },
+        { name: 'Node.js', tag: 'Backend', desc: 'JavaScript on the server — APIs and full-stack apps.', color: '#3c873a', link: 'https://nodejs.org/en/learn', icon: '🟢' },
+        { name: 'Figma', tag: 'Design', desc: 'Design mockups before you code them.', color: '#a259ff', link: 'https://www.figma.com/', icon: '✏️' }
+      ],
+      challenges: [
+        { name: 'Dark Mode Toggle', desc: 'Add a persistent dark/light theme switcher to your platform.', lv: 'easy' },
+        { name: 'Live Search', desc: 'Build instant, filter-as-you-type search over your task list.', lv: 'medium' },
+        { name: 'Kanban Board', desc: 'Turn the task tracker into a drag-and-drop Kanban board.', lv: 'medium' },
+        { name: 'Offline-First PWA', desc: 'Make your platform installable and usable offline.', lv: 'hard' }
+      ]
+    }
+  };
+
+  var HUB_UNLOCK = 4; // Task 5 = index 4 -> requires 4 completed tasks
+
+  /* ================= HELPERS ================= */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function getProfile() {
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function setProfile(p) { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); }
+  function getDone(track) {
+    try { return JSON.parse(localStorage.getItem(TRACK_PREFIX + track) || '[]'); } catch (e) { return []; }
+  }
+  function setDone(track, arr) { localStorage.setItem(TRACK_PREFIX + track, JSON.stringify(arr)); }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+  }
+
+  /* ================= LOGIN GATE ================= */
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('inName').value.trim();
+    var program = $('inProgram').value;
+    var sid = $('inId').value.trim();
+    if (!name || !program || !sid || !TRACKS[program]) { $('loginError').hidden = false; return; }
+    setProfile({ name: name, program: program, studentId: sid, loginAt: Date.now() });
+    toast('Welcome, ' + name.split(' ')[0] + '!');
+    boot();
+  });
+
+  $('logoutBtn').addEventListener('click', function () {
+    localStorage.removeItem(PROFILE_KEY);
+    window.location.href = 'index.html#home';
+  });
+
+  /* ================= DASHBOARD RENDER ================= */
+  var profile = null, trackKey = null, track = null;
+
+  function currentTaskIndex(done) {
+    for (var i = 0; i < 8; i++) { if (done.indexOf(i) === -1) return i; }
+    return -1; // all complete
+  }
+
+  function dayRange(taskIdx) {
+    if (taskIdx < 0) return 'Days 26–30 · Graduation';
+    return TRACKS[trackKey].tasks[taskIdx].days;
+  }
+
+  function renderHeader(done) {
+    var initials = profile.name.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+    $('avatarInitials').textContent = initials;
+    $('heroName').textContent = profile.name;
+    $('heroId').textContent = '· ' + profile.studentId;
+    $('topbarUser').textContent = profile.name.split(' ')[0] + ' · ' + profile.studentId;
+    $('welcomeMsg').textContent = track.welcome;
+    $('trackChip').textContent = track.label;
+    $('heroCard').className = 'hero ' + track.heroCls;
+    $('dayChip').textContent = '📅 ' + dayRange(currentTaskIndex(done));
+
+    var cur = currentTaskIndex(done);
+    if (cur === -1) {
+      $('statusText').textContent = 'Completed 🎓';
+      $('statusSub').textContent = 'All 8 tasks done — graduation ready!';
+    } else {
+      $('statusText').textContent = 'In Progress';
+      $('statusSub').textContent = 'Current: Task ' + (cur + 1) + ' of 8 · ' + track.tasks[cur].days;
+    }
+  }
+
+  function renderStats(done) {
+    var completed = done.length;
+    var remaining = 8 - completed;
+    var pct = Math.round((completed / 8) * 100);
+    $('statDone').textContent = completed;
+    $('statLeft').textContent = remaining;
+    $('statPct').textContent = pct + '%';
+    $('pctBig').textContent = pct + '%';
+    setTimeout(function () { $('progressFill').style.width = pct + '%'; }, 80);
+    $('progressHint').textContent = completed === 8
+      ? 'All tasks complete — outstanding work! 🎉'
+      : pct + '% through your 30-day internship · ' + remaining + ' task' + (remaining === 1 ? '' : 's') + ' to go.';
+    $('celebrate').hidden = completed !== 8;
+  }
+
+  function renderTasks(done) {
+    var cur = currentTaskIndex(done);
+    var list = $('taskList');
+    list.innerHTML = '';
+    track.tasks.forEach(function (task, i) {
+      var isDone = done.indexOf(i) !== -1;
+      var isCurrent = (i === cur);
+
+      var row = document.createElement('div');
+      row.className = 'task ' + (isDone ? 'done' : (isCurrent ? 'current' : 'upcoming'));
+
+      var statusTag = isDone
+        ? '<span class="st st-done">✔ Completed</span>'
+        : (isCurrent ? '<span class="st st-current"><span class="mini-dot"></span> Current Task</span>'
+                     : '<span class="st st-upcoming">Upcoming</span>');
+
+      row.innerHTML =
+        '<div class="tl">' +
+          '<span class="node ' + (isDone ? 'node-done' : (isCurrent ? 'node-current' : '')) + '">' + (isDone ? '✔' : (i + 1)) + '</span>' +
+          '<span class="tl-line ' + (isDone ? 'done' : '') + '"></span>' +
+        '</div>' +
+        '<div class="task-body">' +
+          '<div class="task-top">' +
+            '<h4>' + esc(task.title) + '</h4>' +
+            '<label class="check"><input type="checkbox" data-task="' + i + '"' + (isDone ? ' checked' : '') + '><span>' + (isDone ? 'Done' : 'Mark done') + '</span></label>' +
+            '<span class="task-days">' + task.days + '</span>' +
+          '</div>' +
+          '<div class="task-tags">' +
+            '<span class="lv lv-' + task.level + '">' + task.level + '</span>' + statusTag +
+          '</div>' +
+          '<p class="task-desc">' + esc(task.desc) + '</p>' +
+        '</div>';
+
+      list.appendChild(row);
+    });
+
+    list.querySelectorAll('input[data-task]').forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        var i = parseInt(cb.getAttribute('data-task'), 10);
+        var completed = getDone(trackKey);
+        if (cb.checked && completed.indexOf(i) === -1) completed.push(i);
+        if (!cb.checked) completed = completed.filter(function (x) { return x !== i; });
+        completed.sort(function (a, b) { return a - b; });
+        setDone(trackKey, completed);
+        toast(cb.checked ? 'Task ' + (i + 1) + ' marked complete ✅' : 'Task ' + (i + 1) + ' reopened');
+        renderAll();
+      });
+    });
+  }
+
+  function renderTech() {
+    var grid = $('techGrid');
+    grid.innerHTML = '';
+    track.techs.forEach(function (t) {
+      var a = document.createElement('a');
+      a.className = 'tech-card';
+      a.href = t.link;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML =
+        '<div class="tech-ico" style="background:' + t.color + '">' + t.icon + '</div>' +
+        '<h4>' + esc(t.name) + '</h4>' +
+        '<p>' + esc(t.desc) + '</p>' +
+        '<span class="tech-tag">' + esc(t.tag) + '</span>';
+      grid.appendChild(a);
+    });
+  }
+
+  function renderHub(done) {
+    var unlocked = done.length >= HUB_UNLOCK;
+    var list = $('hubList');
+    list.innerHTML = '';
+    track.challenges.forEach(function (c, i) {
+      var div = document.createElement('div');
+      div.className = 'hub-item';
+      div.innerHTML =
+        '<span class="hi-num">' + String(i + 1).padStart(2, '0') + '</span>' +
+        '<div class="hi-body"><strong>' + esc(c.name) + '</strong><span>' + esc(c.desc) + '</span></div>' +
+        '<span class="hi-lv hi-lv-' + c.lv + '">' + c.lv + '</span>';
+      list.appendChild(div);
+    });
+    $('hubLock').hidden = unlocked;
+    $('lockFill').style.width = Math.min(100, Math.round((done.length / HUB_UNLOCK) * 100)) + '%';
+    $('lockMsg').textContent = unlocked
+      ? ''
+      : 'Complete ' + (HUB_UNLOCK - done.length) + ' more task' + (HUB_UNLOCK - done.length === 1 ? '' : 's') + ' to unlock the Challenge Hub.';
+    $('hubBadge').textContent = unlocked ? '⚡ Unlocked' : 'Locked · Task 5';
+  }
+
+  function renderAll() {
+    var done = getDone(trackKey);
+    renderHeader(done);
+    renderStats(done);
+    renderTasks(done);
+    renderHub(done);
+  }
+
+  /* ================= RESET ================= */
+  $('resetBtn').addEventListener('click', function () {
+    if (!window.confirm('Reset all tracked progress for ' + track.label + '?')) return;
+    setDone(trackKey, []);
+    renderAll();
+    toast('Progress reset');
+  });
+
+  /* ================= BOOT ================= */
+  async function boot() {
+    profile = getProfile();
+    if (!profile || !TRACKS[profile.program]) {
+      $('loginScreen').style.display = 'flex';
+      $('app').classList.remove('on');
+      return;
+    }
+    trackKey = profile.program;
+    track = TRACKS[trackKey];
+    $('loginScreen').style.display = 'none';
+    $('app').classList.add('on');
+    renderTech();
+    $('taskCountLbl').textContent = 'Loading tasks...';
+
+    try {
+      var response = await fetch('/api/tasks?track=' + encodeURIComponent(trackKey));
+      var tasks = await response.json();
+      if (!response.ok) throw new Error(tasks.error || 'Task request failed.');
+      if (!Array.isArray(tasks) || tasks.length !== 8 || tasks.some(function (task) {
+        return !task.title || !task.desc || !task.days || !task.level;
+      })) throw new Error('The task data is incomplete.');
+
+      track.tasks = tasks;
+      $('taskCountLbl').textContent = 'Tick tasks off as you complete them. Your current task is highlighted in blue.';
+      renderAll();
+    } catch (error) {
+      console.error('Unable to load dashboard tasks:', error);
+      $('taskCountLbl').textContent = 'Tasks could not be loaded from the server. Check your connection and refresh.';
+      $('taskList').textContent = 'Unable to load tasks. Please try again later.';
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
